@@ -1,28 +1,28 @@
 package com.miilhozinho.chunkgenerator.manager;
 
-import com.google.gson.GsonBuilder;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.math.util.ChunkUtil;
-import com.hypixel.hytale.math.vector.Vector2i;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandSender;
-import com.hypixel.hytale.server.core.command.system.arguments.types.RelativeChunkPosition;
 import com.hypixel.hytale.server.core.entity.entities.Player;
-import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.ChunkStore;
 import com.miilhozinho.chunkgenerator.ChunkGenerator;
 import com.miilhozinho.chunkgenerator.data.GenState;
 import com.miilhozinho.chunkgenerator.data.GenStateBlockingFile;
+import com.miilhozinho.chunkgenerator.events.ProgressUpdateEvent;
+import com.miilhozinho.chunkgenerator.ui.ProgressUI;
 import com.miilhozinho.chunkgenerator.util.FileUtils;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.universe.world.World;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.LongPredicate;
 import java.util.logging.Level;
-import com.hypixel.hytale.server.core.command.commands.world.chunk.ChunkLoadCommand;
+
+import com.miilhozinho.chunkgenerator.util.ProgressEventListener;
 
 import javax.annotation.Nonnull;
 
@@ -41,10 +41,10 @@ public class GenerationManager {
     private ScheduledExecutorService scheduler;
     private Thread savingThread;
     private boolean isDirty = false;
+    private final List<ProgressEventListener> progressListeners = new CopyOnWriteArrayList<>();
 
     public static GenerationManager getInstance() {
         return INSTANCE;
-
     }
 
     private GenerationManager() {
@@ -83,17 +83,26 @@ public class GenerationManager {
         }
     }
 
-    public void startGeneration(String worldName, CommandSender player, int centerX, int centerZ) {
+    public void startGeneration(String worldName, CommandSender sender, int centerX, int centerZ) {
         // Use the current configured radius, default to 100 if not set
         int radius = genStateFile.getGenState().getTargetRadius();
         if (radius <= 0) {
             radius = 100; // Default radius
         }
-        player.sendMessage(Message.raw("Started chunk generation at position (" + centerX + ", " + centerZ + ") with "+ radius +" radius"));
+        sender.sendMessage(Message.raw("Started chunk generation at position (" + centerX + ", " + centerZ + ") with "+ radius +" radius"));
+
+        // Create ProgressUI if sender is a Player
+        if (sender instanceof Player player) {
+            // TODO: Get PlayerRef from Player - this may need adjustment based on Hytale API
+            // For now, we'll skip UI creation until we have the correct API
+            // progressUI = new ProgressUI(playerRef);
+            // progressUI.display(); // or whatever method shows the HUD
+        }
+
         GenState state = new GenState(worldName, centerX, centerZ, radius);
         genStateFile.setGenState(state);
         markDirty();
-        startGenerationInternal(player);
+        startGenerationInternal(sender);
     }
 
     public void setTargetRadius(int radius) {
@@ -124,7 +133,13 @@ public class GenerationManager {
         if (world == null) return;
 
         // Schedule the generation task using Java's ScheduledExecutorService
+        notifyProgressListeners(0, state.getCurrentIndex(), totalChunks());
         scheduler.scheduleAtFixedRate(() -> processGeneration(world, player), 0, 1, TimeUnit.SECONDS);
+    }
+
+    private long totalChunks() {
+        int radius = genStateFile.getGenState().getTargetRadius();
+        return (2L * radius + 1) * (2L * radius + 1);
     }
 
     private void processGeneration(World world, CommandSender player) {
@@ -135,8 +150,7 @@ public class GenerationManager {
         }
 
         // Calculate total chunks for percentage display
-        int radius = state.getTargetRadius();
-        long totalChunks = (2L * radius + 1) * (2L * radius + 1);
+        var totalChunks = totalChunks();
 
         // TODO: Replace with Hytale TPS monitoring API
         // Example: double tps = Server.getTPS(); or world.getServer().getTPS();
@@ -157,6 +171,7 @@ public class GenerationManager {
             if (dist > state.getTargetRadius()) {
                 pauseGeneration();
                 logger.at(Level.INFO).log("Generation completed for radius " + state.getTargetRadius());
+                notifyProgressListeners(100, state.getCurrentIndex(), totalChunks);
                 return;
             }
 
@@ -177,9 +192,9 @@ public class GenerationManager {
                 logger.at(Level.SEVERE).log("Failed to generate chunk " + chunkX + "," + chunkZ + ": " + e.getMessage());
             }
             long currentIndex = state.getCurrentIndex();
-            if (currentIndex % 50 == 0) {
-                double percentage = (currentIndex * 100.0) / totalChunks;
-                player.sendMessage(Message.raw(String.format("Progress: %.1f%% (%d/%d pos) (%d/%d chunks)", percentage, currentIndex, totalChunks, ChunkUtil.chunkCoordinate(currentIndex), ChunkUtil.chunkCoordinate(totalChunks))));
+            double percentage = (currentIndex * 100.0) / totalChunks;
+            if (currentIndex % 50 == 0 || percentage >= 100) {
+                notifyProgressListeners(percentage, currentIndex, totalChunks);
             }
 
             state.setCurrentIndex(state.getCurrentIndex() + 1);
@@ -209,6 +224,21 @@ public class GenerationManager {
             y += dy;
         }
         return new int[]{x, y};
+    }
+
+    public void addProgressListener(ProgressEventListener listener) {
+        progressListeners.add(listener);
+    }
+
+    public void removeProgressListener(ProgressEventListener listener) {
+        progressListeners.remove(listener);
+    }
+
+    public void notifyProgressListeners(double percentage, long currentChunks, long totalChunks) {
+        ProgressUpdateEvent event = new ProgressUpdateEvent(percentage, currentChunks, totalChunks);
+        for (ProgressEventListener listener : progressListeners) {
+            listener.onProgressUpdate(event);
+        }
     }
 
     private void markDirty() {

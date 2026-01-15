@@ -5,19 +5,15 @@ import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.CommandSender;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractAsyncCommand;
 import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.miilhozinho.chunkgenerator.manager.GenerationManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.CompletableFuture;
 
-public class GenerateCommand extends AbstractAsyncCommand {
+public class ResumeCommand extends AbstractAsyncCommand {
 
-    public GenerateCommand() {
-        super("chunk-generator", "Manages chunk generation");
-        this.addSubCommand(new RadiusCommand());
-        this.addSubCommand(new StartCommand());
-        this.addSubCommand(new PauseCommand());
-        this.addSubCommand(new ResumeCommand());
-        this.addSubCommand(new StatusCommand());
+    public ResumeCommand() {
+        super("resume", "Resumes generation");
     }
 
     @NotNull
@@ -25,7 +21,8 @@ public class GenerateCommand extends AbstractAsyncCommand {
     protected CompletableFuture<Void> executeAsync(CommandContext commandContext) {
         CommandSender sender = commandContext.sender();
         if (sender instanceof Player player) {
-            player.sendMessage(Message.raw("Use /chunk-generator radius <value>, start <x> <z>, pause, or resume"));
+            GenerationManager.getInstance().resumeGeneration(player);
+            player.sendMessage(Message.raw("Chunk generation resumed"));
             return CompletableFuture.completedFuture(null);
         } else {
             return CompletableFuture.completedFuture(null);

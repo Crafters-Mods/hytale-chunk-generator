@@ -10,6 +10,8 @@ import com.hypixel.hytale.server.core.universe.world.events.AddWorldEvent;
 import com.hypixel.hytale.server.core.universe.world.events.RemoveWorldEvent;
 import com.hypixel.hytale.server.core.util.Config;
 
+import java.util.concurrent.*;
+
 import java.util.HashMap;
 import java.util.logging.Level;
 
@@ -26,6 +28,7 @@ public class ChunkGenerator extends JavaPlugin {
     @Override
     protected void setup() {
         super.setup();
+
         // Register the generation manager as a system or ticking entity
         // For now, we'll initialize it
         GenerationManager.getInstance();

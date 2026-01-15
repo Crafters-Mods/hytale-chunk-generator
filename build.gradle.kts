@@ -37,13 +37,23 @@ runHytale {
     assetsPath = "file:///C://Users/thiag/AppData/Roaming/Hytale/install/release/package/game/latest/Assets.zip"
 }
 
+
+sourceSets {
+    main {
+        resources {
+            srcDir("assets")
+        }
+    }
+}
+
 tasks {
     // Configure Java compilation
     compileJava {
         options.encoding = Charsets.UTF_8.name()
         options.release = 25
     }
-    
+
+
     // Configure resource processing
     processResources {
         filteringCharset = Charsets.UTF_8.name()

@@ -1,5 +1,5 @@
 {
-  "Group": "ChunkGenerator",
+  "Group": "Miilhozinho",
   "Name": "ChunkGenerator",
   "Version": "1.0.0",
   "Description": "A Hytale plugin template",
@@ -13,7 +13,11 @@
   "Website": "https://github.com/yourusername/hytale-plugin-template",
   "Main": "com.miilhozinho.chunkgenerator.ChunkGenerator",
   "ServerVersion": "*",
-  "Dependencies": {},
+  "Dependencies": {
+    "Hytale:EntityModule": "*",
+    "Hytale:AssetModule": "*"
+  },
   "OptionalDependencies": {},
-  "DisabledByDefault": false
+  "DisabledByDefault": false,
+  "IncludesAssetPack": true
 }

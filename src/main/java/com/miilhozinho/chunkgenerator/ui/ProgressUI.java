@@ -1,53 +1,67 @@
 package com.miilhozinho.chunkgenerator.ui;
 
-import com.hypixel.hytale.codec.Codec;
-import com.hypixel.hytale.codec.KeyedCodec;
-import com.hypixel.hytale.codec.builder.BuilderCodec;
-import com.hypixel.hytale.component.Ref;
-import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
-import com.hypixel.hytale.server.core.entity.entities.Player;
-import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCustomUIPage;
+import com.hypixel.hytale.math.util.ChunkUtil;
+import com.hypixel.hytale.server.core.entity.entities.player.hud.CustomUIHud;
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
-import com.hypixel.hytale.server.core.ui.builder.UIEventBuilder;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
-import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.miilhozinho.chunkgenerator.events.ProgressUpdateEvent;
+import com.miilhozinho.chunkgenerator.manager.GenerationManager;
+import org.jetbrains.annotations.NotNull;
 
-public class ProgressUI extends InteractiveCustomUIPage<ProgressUI.ProgressData> {
+import java.util.Objects;
+
+public class ProgressUI extends CustomUIHud {
+
+    private static boolean canDisplay = true;
+    private ProgressUpdateEvent latestEvent;
 
     public ProgressUI(PlayerRef playerRef) {
-        super(playerRef, CustomPageLifetime.CanDismiss, ProgressData.CODEC);
+        super(playerRef);
+
+        // Register listener that receives uiCommandBuilder directly
+        GenerationManager.getInstance().addProgressListener(event -> {
+            this.latestEvent = event;
+            updateProgressBars(event);
+        });
     }
 
     @Override
-    public void handleDataEvent(Ref<EntityStore> ref, Store<EntityStore> store, ProgressData data) {
-        super.handleDataEvent(ref, store, data);
-        // Handle any events if needed
-        this.sendUpdate();
+    public void build(@NotNull UICommandBuilder uiCommandBuilder) {
+        if (canDisplay) {
+            // UI is being displayed - register as progress listener
+            uiCommandBuilder.append("Hud/Miilhozinho_ChunkGenerator_Progress.ui");
+
+            // Build with current/latest progress
+            if (latestEvent != null) {
+                updateProgressBars(latestEvent);
+            }
+        }
+        canDisplay = !canDisplay;
     }
 
-    @Override
-    public void build(Ref<EntityStore> ref, UICommandBuilder uiCommandBuilder, UIEventBuilder uiEventBuilder, Store<EntityStore> store) {
-        uiCommandBuilder.append("Pages/miilhozinho_ChunkGenerator_Progress.ui");
-        // Set initial values
-        uiCommandBuilder.set("#ProgressText.Text", "0/0");
-        uiCommandBuilder.set("#SpeedText.Text", "0 chunks/sec");
-        uiCommandBuilder.set("#ETAText.Text", "00:00");
-    }
+    public void updateProgressBars(ProgressUpdateEvent event) {
+        // Calculate how many bars should be green (each bar represents 10%)
+        System.out.println("Atualizou: " + event.percentage());
+        int barsToColor = (int) Math.floor(event.percentage() / 10.0);
+        var uiCommandBuilder = new UICommandBuilder();
+        if (event.percentage() == 100){
+            update(true, uiCommandBuilder);
+            return;
+        }
+        uiCommandBuilder.append("Hud/Miilhozinho_ChunkGenerator_Progress.ui");
+        uiCommandBuilder.set("#LabelChunkGenerator.Text", String.format("Progress: %.1f%% (%d/%d pos) (%d/%d chunks)", event.percentage(), event.currentChunks(), event.totalChunks(), ChunkUtil.chunkCoordinate(event.currentChunks()), ChunkUtil.chunkCoordinate(event.totalChunks())));
 
-    public void updateProgress(int current, int total, double speed, String eta) {
-        // This would be called from GenerationManager to update the UI
-        // For simplicity, assume we have a way to send update
-    }
-
-    public static class ProgressData {
-        static final String KEY_UPDATE = "Update";
-
-        @SuppressWarnings("deprecation")
-        public static final BuilderCodec<ProgressData> CODEC = BuilderCodec.<ProgressData>builder(ProgressData.class, ProgressData::new)
-                .addField(new KeyedCodec<>(KEY_UPDATE, Codec.STRING), (data, s) -> data.update = s, data -> data.update)
-                .build();
-
-        private String update;
+        // Update each bar's color
+        for (int i = 1; i <= 10; i++) {
+            String barId = "#Bar" + i;
+            if (i <= barsToColor) {
+                // Green for completed bars
+                uiCommandBuilder.set(barId + ".Background.Color", "#46b447");
+            } else {
+                // Dark for incomplete bars
+                uiCommandBuilder.set(barId + ".Background.Color", "#1a1a2e");
+            }
+        }
+        update(true, uiCommandBuilder);
     }
 }
