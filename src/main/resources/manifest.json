@@ -1,8 +1,8 @@
 {
   "Group": "Miilhozinho",
   "Name": "ChunkGenerator",
-  "Version": "1.0.0",
-  "Description": "A Hytale plugin template",
+  "Version": "${Version}",
+  "Description": "${Description}",
   "Authors": [
     {
       "Name": "Thiago Maia da Costa",

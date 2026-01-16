@@ -62,9 +62,9 @@ tasks {
         
         // Replace placeholders in manifest.json
         val props = mapOf(
-            "group" to project.group,
-            "version" to project.version,
-            "description" to project.description
+            "Group" to project.group,
+            "Version" to project.version,
+            "Description" to project.description
         )
         inputs.properties(props)
         
