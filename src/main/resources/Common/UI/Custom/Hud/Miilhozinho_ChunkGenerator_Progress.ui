@@ -1,63 +1,24 @@
+@ProcessBarWidth = 420;
+@BarHeight = 25;
+
 Group #ProgressBar {
     LayoutMode: Top;
-    Anchor: (Width: 420, Height: 60, Top: 50);
+    Anchor: (Width: @ProcessBarWidth, Height: 60, Top: 50);
 
-    Group #Bars {
+    Group {
+      Anchor: (Height: @BarHeight);
+      Background: #1a1a2e(0.8);
+
+      Group #Bar {
         LayoutMode: Left;
-        Anchor: (Width: 420, Height: 20);
-
-        Group #Bar1 {
-            Anchor: (Width: 40, Height: 20, Left: 2);
-            Background: #1a1a2e(0.95);
-        }
-
-        Group #Bar2 {
-            Anchor: (Width: 40, Height: 20, Left: 2);
-            Background: #1a1a2e(0.95);
-        }
-
-        Group #Bar3 {
-            Anchor: (Width: 40, Height: 20, Left: 2);
-            Background: #1a1a2e(0.95);
-        }
-
-        Group #Bar4 {
-            Anchor: (Width: 40, Height: 20, Left: 2);
-            Background: #1a1a2e(0.95);
-        }
-
-        Group #Bar5 {
-            Anchor: (Width: 40, Height: 20, Left: 2);
-            Background: #1a1a2e(0.95);
-        }
-
-        Group #Bar6 {
-            Anchor: (Width: 40, Height: 20, Left: 2);
-            Background: #1a1a2e(0.95);
-        }
-
-        Group #Bar7 {
-            Anchor: (Width: 40, Height: 20, Left: 2);
-            Background: #1a1a2e(0.95);
-        }
-
-        Group #Bar8 {
-            Anchor: (Width: 40, Height: 20, Left: 2);
-            Background: #1a1a2e(0.95);
-        }
-
-        Group #Bar9 {
-            Anchor: (Width: 40, Height: 20, Left: 2);
-            Background: #1a1a2e(0.95);
-        }
-
-        Group #Bar10 {
-            Anchor: (Width: 40, Height: 20, Left: 2);
-            Background: #1a1a2e(0.95);
-        }
+        Anchor: (Width: 0, Height: @BarHeight, Left: 0);
+        Background: #1a1a2e(0.8);
+      }
     }
+
     Label #LabelChunkGenerator{
-        Padding: (Left: 10);
+        Padding: (Left: 20);
+        Style: (FontSize: 13, TextColor: #FFFFFF, Alignment: Center, VerticalAlignment: Center);
         Text: "";
     }
 }

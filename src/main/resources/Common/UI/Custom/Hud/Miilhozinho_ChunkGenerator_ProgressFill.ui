@@ -1,0 +1,7 @@
+Group {
+    LayoutMode: Left;
+    FlexWeight: 1;
+    Anchor: (Width: 30, Height: 30);
+    Background: #46b447;
+
+}

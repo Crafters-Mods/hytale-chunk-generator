@@ -4,6 +4,7 @@ plugins {
     id("java-library")
     id("com.gradleup.shadow") version "9.3.1"
     id("run-hytale")
+    kotlin("jvm")
 }
 
 group = findProperty("pluginGroup") as String? ?: "com.miilhozinho"
@@ -26,6 +27,7 @@ dependencies {
     // Test dependencies
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 // Configure server testing
