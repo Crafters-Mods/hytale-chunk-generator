@@ -1,6 +1,5 @@
 package com.miilhozinho.chunkgenerator.command
 
-import com.hypixel.hytale.protocol.GameMode
 import com.hypixel.hytale.server.core.Message
 import com.hypixel.hytale.server.core.command.system.CommandContext
 import com.hypixel.hytale.server.core.command.system.CommandSender
@@ -11,7 +10,7 @@ import java.util.concurrent.CompletableFuture
 
 class PauseCommand(val generationManager: GenerationManager) : AbstractAsyncCommand("pause", "Pauses generation") {
     init {
-        this.setPermissionGroup(GameMode.Adventure)
+        this.requirePermission("chunkgenerator.command.start")
     }
 
     override fun executeAsync(commandContext: CommandContext): CompletableFuture<Void?> {

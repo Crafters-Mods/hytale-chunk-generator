@@ -1,6 +1,5 @@
 package com.miilhozinho.chunkgenerator.command
 
-import com.hypixel.hytale.protocol.GameMode
 import com.hypixel.hytale.server.core.command.system.CommandContext
 import com.hypixel.hytale.server.core.command.system.CommandSender
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg
@@ -17,7 +16,7 @@ class StartCommand(val generationManager: GenerationManager) : AbstractAsyncComm
     private val z: RequiredArg<Int?>
 
     init {
-        this.setPermissionGroup(GameMode.Adventure)
+        this.requirePermission("chunkgenerator.command.start")
         this.x = this.withRequiredArg<Int?>("x", "Sets the x target generation radius", ArgTypes.INTEGER)
         this.z = this.withRequiredArg<Int?>("z", "Sets the z target generation radius", ArgTypes.INTEGER)
     }

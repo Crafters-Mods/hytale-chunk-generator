@@ -4,7 +4,6 @@ import com.hypixel.hytale.server.core.Constants;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 
 public class FileUtils {
 

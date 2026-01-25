@@ -1,6 +1,5 @@
 package com.miilhozinho.chunkgenerator.command
 
-import com.hypixel.hytale.protocol.GameMode
 import com.hypixel.hytale.server.core.Message
 import com.hypixel.hytale.server.core.command.system.CommandContext
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg
@@ -14,8 +13,8 @@ class RadiusCommand(val generationManager: GenerationManager) : AbstractAsyncCom
     private val radius: RequiredArg<Int?>
 
     init {
-        this.setPermissionGroup(GameMode.Adventure)
-        this.radius = this.withRequiredArg<Int?>("radius", "Sets the target generation radius", ArgTypes.INTEGER)
+        this.requirePermission("chunkgenerator.command.radius")
+        this.radius = this.withRequiredArg("radius", "Sets the target generation radius", ArgTypes.INTEGER)
     }
 
     override fun executeAsync(commandContext: CommandContext): CompletableFuture<Void?> {
@@ -23,7 +22,7 @@ class RadiusCommand(val generationManager: GenerationManager) : AbstractAsyncCom
         if (sender is Player) {
             val radiusValue: Int = this.radius.get(commandContext)!!
             generationManager.setTargetRadius(radiusValue)
-            sender.sendMessage(Message.raw("Target generation radius set to " + radiusValue))
+            sender.sendMessage(Message.raw("Target generation radius set to $radiusValue"))
             return CompletableFuture.completedFuture<Void?>(null)
         } else {
             return CompletableFuture.completedFuture<Void?>(null)
