@@ -3,7 +3,6 @@ package com.miilhozinho.chunkgenerator.data
 import com.hypixel.hytale.server.core.HytaleServer
 import com.hypixel.hytale.server.core.universe.PlayerRef
 import com.miilhozinho.chunkgenerator.events.BaseEvent
-import com.miilhozinho.chunkgenerator.util.LogUtil
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -14,7 +13,7 @@ object PlayerManager {
     private val playersOnline: MutableMap<UUID, PlayerRef> = ConcurrentHashMap()
 
     fun addPlayer(player: PlayerRef) {
-        playersOnline.put(player.uuid, player)
+        playersOnline[player.uuid] = player
     }
 
     fun removePlayer(playerUuid: UUID) {
@@ -22,7 +21,7 @@ object PlayerManager {
     }
 
     fun broadcastEvent(event: BaseEvent) {
-        if (playersOnline.size == 0)
+        if (playersOnline.isEmpty())
             return
 
 //        LogUtil.logInfo("Broadcast ${event.javaClass.name} to ${playersOnline.size} players")

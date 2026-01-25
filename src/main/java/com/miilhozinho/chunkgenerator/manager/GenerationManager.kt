@@ -28,6 +28,7 @@ class GenerationManager  {
 
     init {
         FileUtils.ensureMainDirectory()
+        LogUtil.logInfo("Session file path: ${FileUtils.SESSION_PATH}")
         this.genStateFile = GenStateBlockingFile()
         this.scheduler = Executors.newScheduledThreadPool(1)
         try {
@@ -36,7 +37,7 @@ class GenerationManager  {
             LogUtil.logSevere("Failed to load generation state: ${e.message}")
         }
 
-        this.savingThread = Thread(Runnable {
+        this.savingThread = Thread {
             while (true) {
                 if (isDirty) {
                     isDirty = false
@@ -49,11 +50,11 @@ class GenerationManager  {
                 }
                 try {
                     Thread.sleep(5000)
-                } catch (e: InterruptedException) {
+                } catch (_: InterruptedException) {
                     break
                 }
             }
-        })
+        }
         this.savingThread.start()
 
         // Resume if not paused
@@ -104,8 +105,7 @@ class GenerationManager  {
         val state = genStateFile.genState
         if (state.isPaused() || state.worldName.isEmpty()) return
 
-        val world = ChunkGenerator.WORLDS.get(state.worldName)
-        if (world == null) return
+        val world = ChunkGenerator.WORLDS[state.worldName] ?: return
 
         broadcastEvent(
             ProgressUpdatedEvent(
@@ -114,7 +114,15 @@ class GenerationManager  {
                 totalChunks()
             )
         )
-        scheduler.scheduleAtFixedRate(Runnable { processGeneration(world, player) }, 0, 1, TimeUnit.SECONDS)
+        scheduler.scheduleAtFixedRate({ processGeneration(world, player) }, 0, 1, TimeUnit.SECONDS)
+    }
+
+    // New public helper: try to auto-resume when a world is added
+    fun tryAutoResumeForWorld(worldName: String) {
+        val state = genStateFile.genState
+        if (!state.isPaused() && state.worldName == worldName) {
+            startGenerationInternal(null)
+        }
     }
 
     private fun totalChunks(): Long {
@@ -169,10 +177,9 @@ class GenerationManager  {
                     LogUtil.logInfo("Já existe $chunkX $chunkZ")
                 } else {
                     world.getChunkAsync(chunkX, chunkZ).thenAccept(Consumer { worldChunk: WorldChunk? ->
-                        world.execute(
-                            Runnable {
-                                worldChunk!!.markNeedsSaving()
-                            })
+                        world.execute {
+                            worldChunk!!.markNeedsSaving()
+                        }
                     })
                 }
 

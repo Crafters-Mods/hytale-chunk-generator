@@ -1,8 +1,6 @@
 package com.miilhozinho.chunkgenerator.events;
 
 
-import java.util.Objects;
-
 public record ProgressUpdateEvent(double percentage, long currentChunks, long totalChunks) {
 
     @Override

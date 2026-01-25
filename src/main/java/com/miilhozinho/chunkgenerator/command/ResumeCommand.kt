@@ -8,6 +8,11 @@ import com.miilhozinho.chunkgenerator.manager.GenerationManager
 import java.util.concurrent.CompletableFuture
 
 class ResumeCommand(val generationManager: GenerationManager) : AbstractAsyncCommand("resume", "Resumes generation") {
+
+    init {
+        this.requirePermission("chunkgenerator.command.start")
+    }
+
     override fun executeAsync(commandContext: CommandContext): CompletableFuture<Void?> {
         val sender = commandContext.sender()
         if (sender is Player) {
