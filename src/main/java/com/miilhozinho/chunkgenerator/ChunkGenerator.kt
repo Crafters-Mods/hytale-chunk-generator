@@ -72,7 +72,7 @@ class ChunkGenerator(init: JavaPluginInit) : JavaPlugin(init) {
             }
 
         eventBus
-            .register<ProgressUpdatedEvent>(ProgressUpdatedEvent::class.java, { event: ProgressUpdatedEvent ->
+            .register(ProgressUpdatedEvent::class.java, { event: ProgressUpdatedEvent ->
                 ProgressUpdatedEventHandler(event.playerRef!!).handle(event)
             })
 //        eventBus
