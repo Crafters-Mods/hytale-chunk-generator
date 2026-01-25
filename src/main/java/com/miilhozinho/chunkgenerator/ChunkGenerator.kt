@@ -73,6 +73,7 @@ class ChunkGenerator(init: JavaPluginInit) : JavaPlugin(init) {
 
         eventBus
             .register(ProgressUpdatedEvent::class.java, { event: ProgressUpdatedEvent ->
+                //TODO add here permission check if possible(see commented code below)
                 ProgressUpdatedEventHandler(event.playerRef!!).handle(event)
             })
 //        eventBus
