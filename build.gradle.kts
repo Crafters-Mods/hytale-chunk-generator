@@ -12,14 +12,13 @@ version = findProperty("pluginVersion") as String? ?: "1.0.0"
 description = findProperty("pluginDescription") as String? ?: "A Hytale plugin template"
 
 repositories {
-    mavenLocal()
     mavenCentral()
+    maven("https://maven.hytale.com/release") { name = "hytale-release" }
 }
 
 dependencies {
-    // Hytale Server API (provided by server at runtime)
-//    compileOnly(files("libs/HytaleServer.jar"))
-    compileOnly(files("${System.getenv("APPDATA")}/Hytale/install/release/package/game/latest/Server/HytaleServer.jar"))
+    compileOnly("com.hypixel.hytale:Server:2026.01.24-6e2d4fc36")
+
     // Common dependencies (will be bundled in JAR)
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("org.jetbrains:annotations:24.1.0")
