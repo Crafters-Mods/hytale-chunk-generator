@@ -1,13 +1,16 @@
 package com.miilhozinho.chunkgenerator.ui
 
+import com.buuz135.mhud.MultipleHUD
 import com.hypixel.hytale.math.util.ChunkUtil
+import com.hypixel.hytale.server.core.entity.entities.Player
 import com.hypixel.hytale.server.core.entity.entities.player.hud.CustomUIHud
 import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder
 import com.hypixel.hytale.server.core.universe.PlayerRef
+import com.miilhozinho.chunkgenerator.data.PlayerConnectEvent
 import com.miilhozinho.chunkgenerator.events.ProgressUpdatedEvent
 import com.miilhozinho.chunkgenerator.util.LogUtil
 
-class ProgressUpdatedEventHandler(playerRef: PlayerRef) : CustomUIHud(playerRef) {
+class ProgressUpdatedEventHandler(playerConnectEvent: PlayerConnectEvent) : CustomUIHud(playerConnectEvent.playerRef) {
 
     fun handle(event: ProgressUpdatedEvent) {
         val builder = UICommandBuilder()
@@ -15,6 +18,7 @@ class ProgressUpdatedEventHandler(playerRef: PlayerRef) : CustomUIHud(playerRef)
             val processBarWidth = 420
             val barsToColor = event.percentage / 100.0
             if (event.percentage == 100.0) {
+
                 LogUtil.logInfo("${event.log()} Chunk Generator finished")
                 update(true, builder)
                 return
@@ -42,6 +46,8 @@ class ProgressUpdatedEventHandler(playerRef: PlayerRef) : CustomUIHud(playerRef)
                     "    Background: #46b447(0.7);\n" +
                     "\n" +
                     "}")
+            val player = event.playerConnectEvent!!.playerRef.holder!!.getComponent(Player.getComponentType())
+            MultipleHUD.getInstance().setCustomHud(player!!, event.playerConnectEvent!!.playerRef, "ChunkGenerator_HUD", this)
         }
         build(builder)
     }

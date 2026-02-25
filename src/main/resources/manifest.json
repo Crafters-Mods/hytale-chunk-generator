@@ -15,7 +15,8 @@
   "ServerVersion": "*",
   "Dependencies": {
     "Hytale:EntityModule": "*",
-    "Hytale:AssetModule": "*"
+    "Hytale:AssetModule": "*",
+    "Buuz135:MultipleHUD": "*"
   },
   "OptionalDependencies": {},
   "DisabledByDefault": false,

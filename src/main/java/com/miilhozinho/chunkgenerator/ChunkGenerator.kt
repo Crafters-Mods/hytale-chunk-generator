@@ -1,10 +1,12 @@
 package com.miilhozinho.chunkgenerator
 
+import com.hypixel.hytale.common.plugin.PluginIdentifier
 import com.hypixel.hytale.server.core.HytaleServer
 import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent
 import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent
 import com.hypixel.hytale.server.core.plugin.JavaPlugin
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit
+import com.hypixel.hytale.server.core.plugin.PluginManager
 import com.hypixel.hytale.server.core.universe.world.World
 import com.hypixel.hytale.server.core.universe.world.events.AddWorldEvent
 import com.hypixel.hytale.server.core.universe.world.events.RemoveWorldEvent
@@ -19,6 +21,7 @@ import com.miilhozinho.chunkgenerator.ui.ProgressUpdatedEventHandler
 import java.util.function.Consumer
 import java.util.logging.Level
 
+
 class ChunkGenerator(init: JavaPluginInit) : JavaPlugin(init) {
     init {
         CONFIG = this.withConfig<ChunkGeneratorConfig?>("ChunkGenerator", ChunkGeneratorConfig.CODEC)
@@ -26,7 +29,9 @@ class ChunkGenerator(init: JavaPluginInit) : JavaPlugin(init) {
 
     override fun setup() {
         super.setup()
+
         val generationManager = GenerationManager()
+        val plugin = PluginManager.get().getPlugin(PluginIdentifier.fromString("Buuz135:MultipleHUD"))
 
         this.commandRegistry.registerCommand(GenerateCommand(generationManager))
 
@@ -50,7 +55,7 @@ class ChunkGenerator(init: JavaPluginInit) : JavaPlugin(init) {
 
         eventBus
             .register<PlayerConnectEvent?>(PlayerConnectEvent::class.java, Consumer { event: PlayerConnectEvent? ->
-                addPlayer(event!!.playerRef)
+                addPlayer(event!!.playerRef, event.player!!)
             })
 
         eventBus
@@ -60,7 +65,7 @@ class ChunkGenerator(init: JavaPluginInit) : JavaPlugin(init) {
 
         eventBus
             .register<ProgressUpdatedEvent>(ProgressUpdatedEvent::class.java, { event: ProgressUpdatedEvent ->
-                ProgressUpdatedEventHandler(event.playerRef!!).handle(event)
+                ProgressUpdatedEventHandler(event.playerConnectEvent!!).handle(event)
             })
     }
 

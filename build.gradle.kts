@@ -20,6 +20,8 @@ dependencies {
     // Hytale Server API (provided by server at runtime)
 //    compileOnly(files("libs/HytaleServer.jar"))
     compileOnly(files("${System.getenv("APPDATA")}/Hytale/install/release/package/game/latest/Server/HytaleServer.jar"))
+    compileOnly(files("${System.getenv("APPDATA")}/Hytale/UserData/Mods/MultipleHUD-1.0.1.jar"))
+
     // Common dependencies (will be bundled in JAR)
     implementation("com.google.code.gson:gson:2.10.1")
     implementation("org.jetbrains:annotations:24.1.0")
