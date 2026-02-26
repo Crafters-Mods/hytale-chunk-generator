@@ -6,7 +6,7 @@ import com.hypixel.hytale.server.core.command.system.CommandSender
 import com.hypixel.hytale.server.core.entity.entities.Player
 import com.hypixel.hytale.server.core.universe.world.World
 import com.hypixel.hytale.server.core.universe.world.chunk.WorldChunk
-import com.miilhozinho.chunkgenerator.ChunkGenerator
+import com.miilhozinho.chunkgenerator.ChunkGeneratorPlugin
 import com.miilhozinho.chunkgenerator.data.GenState
 import com.miilhozinho.chunkgenerator.data.GenStateBlockingFile
 import com.miilhozinho.chunkgenerator.data.PlayerManager.broadcastEvent
@@ -104,7 +104,7 @@ class GenerationManager  {
         val state = genStateFile.genState
         if (state.isPaused() || state.worldName.isEmpty()) return
 
-        val world = ChunkGenerator.WORLDS.get(state.worldName)
+        val world = ChunkGeneratorPlugin.WORLDS.get(state.worldName)
         if (world == null) return
 
         broadcastEvent(

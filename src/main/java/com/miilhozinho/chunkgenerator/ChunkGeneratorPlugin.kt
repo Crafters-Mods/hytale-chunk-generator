@@ -22,7 +22,7 @@ import java.util.function.Consumer
 import java.util.logging.Level
 
 
-class ChunkGenerator(init: JavaPluginInit) : JavaPlugin(init) {
+class ChunkGeneratorPlugin(init: JavaPluginInit) : JavaPlugin(init) {
     init {
         CONFIG = this.withConfig<ChunkGeneratorConfig?>("ChunkGenerator", ChunkGeneratorConfig.CODEC)
     }
