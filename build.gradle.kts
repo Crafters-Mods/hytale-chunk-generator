@@ -1,106 +1,185 @@
-import org.gradle.kotlin.dsl.compileOnly
+import org.gradle.kotlin.dsl.tasks
+import kotlin.text.set
 
 plugins {
     id("java-library")
     id("com.gradleup.shadow") version "9.3.1"
-    id("run-hytale")
     kotlin("jvm")
+    id("maven-publish") // Add this line
+}
+
+kotlin {
+    jvmToolchain(25)
 }
 
 group = findProperty("pluginGroup") as String? ?: "com.miilhozinho"
-version = findProperty("pluginVersion") as String? ?: "1.0.0"
+val pluginName = findProperty("pluginName") as String? ?: "PluginName"
+val githubRef = System.getenv("GITHUB_REF")
+version = if (githubRef != null && githubRef.startsWith("refs/tags/")) {
+    githubRef.replace("refs/tags/", "").replace("v", "") // Clean "v1.0.0" to "1.0.0"
+} else {
+    findProperty("pluginVersion") as String? ?: "1.0.0"
+}
 description = findProperty("pluginDescription") as String? ?: "A Hytale plugin template"
+val serverVersion = findProperty("serverVersion") as String? ?: "2026.02.19-1a311a592"
+
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_25
+    targetCompatibility = JavaVersion.VERSION_25
+}
 
 repositories {
-    mavenLocal()
     mavenCentral()
+
+    maven {
+        name = "hytale-release"
+        url = uri("https://maven.hytale.com/release")
+    }
+
+    maven {
+        name = "hytale-pre-release"
+        url = uri("https://maven.hytale.com/pre-release")
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                url = uri("https://cursemaven.com")
+            }
+        }
+        filter {
+            includeGroup("curse.maven")
+        }
+    }
+    // Local repository for the license engine
+    mavenLocal()
+}
+val runtimeServer: Configuration by configurations.creating {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+    extendsFrom(configurations.compileOnly.get())
 }
 
 dependencies {
-    // Hytale Server API (provided by server at runtime)
-//    compileOnly(files("libs/HytaleServer.jar"))
-    compileOnly(files("${System.getenv("APPDATA")}/Hytale/install/release/package/game/latest/Server/HytaleServer.jar"))
-    compileOnly(files("${System.getenv("APPDATA")}/Hytale/UserData/Mods/MultipleHUD-1.0.1.jar"))
+    // All dependencies available for compilation and runtime
+    compileOnly("com.hypixel.hytale:Server:2026.02.19-1a311a592")
 
-    // Common dependencies (will be bundled in JAR)
-    implementation("com.google.code.gson:gson:2.10.1")
-    implementation("org.jetbrains:annotations:24.1.0")
-    
-    // Test dependencies
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    implementation(kotlin("stdlib-jdk8"))
-}
+    compileOnly("curse.maven:Multiplehud-1423634:7530266")
+    compileOnly("curse.maven:HyUI-1431415:7667069")
 
-// Configure server testing
-runHytale {
-    // TODO: Update this URL when Hytale server is available
-    // Using Paper server as placeholder for testing the runServer functionality
-//    jarUrl = "https://fill-data.papermc.io/v1/objects/d5f47f6393aa647759f101f02231fa8200e5bccd36081a3ee8b6a5fd96739057/paper-1.21.10-115.jar"
-    jarUrl = "file:///C://Users/thiag/AppData/Roaming/Hytale/install/release/package/game/latest/Server/HytaleServer.jar"
-    assetsPath = "file:///C://Users/thiag/AppData/Roaming/Hytale/install/release/package/game/latest/Assets.zip"
-}
+    // Testing - JUnit 4
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.8.1")
 
-
-sourceSets {
-    main {
-        resources {
-            srcDir("assets")
-        }
-    }
+//    implementation(kotlin("reflect"))
 }
 
 tasks {
-    // Configure Java compilation
-    compileJava {
-        options.encoding = Charsets.UTF_8.name()
-        options.release = 25
-    }
-
-
-    // Configure resource processing
     processResources {
         filteringCharset = Charsets.UTF_8.name()
-        
+
         // Replace placeholders in manifest.json
         val props = mapOf(
             "Group" to project.group,
+            "Name" to pluginName,
             "Version" to project.version,
-            "Description" to project.description
+            "Description" to project.description,
+            "ServerVersion" to serverVersion
         )
         inputs.properties(props)
-        
+
         filesMatching("manifest.json") {
             expand(props)
         }
     }
-    
-    // Configure ShadowJar (bundle dependencies)
+
     shadowJar {
-        archiveBaseName.set(rootProject.name)
         archiveClassifier.set("")
-        
-        // Relocate dependencies to avoid conflicts
-        relocate("com.google.gson", "com.yourplugin.libs.gson")
-        
-        // Minimize JAR size (removes unused classes)
+        archiveBaseName.set(pluginName)
+
+        // O shadowJar usa o runtimeClasspath, que por padrão NÃO inclui compileOnly
+        configurations = listOf(project.configurations.runtimeClasspath.get())
+
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        mergeServiceFiles()
+
+        // 1. Relocate all external dependencies to your internal shadow package
+        val shadowPackage = "${project.group}.shadow"
+
         minimize()
+
+        exclude("META-INF/*.SF")
+        exclude("META-INF/*.DSA")
+        exclude("META-INF/*.RSA")
+        exclude("META-INF/maven/**")
+        exclude("org/jetbrains/annotations/**")
+//        exclude("kotlin/**")
     }
-    
-    // Configure tests
-    test {
-        useJUnitPlatform()
-    }
-    
+
     // Make build depend on shadowJar
     build {
         dependsOn(shadowJar)
     }
+
+    // Configure JUnit 4 for tests
+    test {
+        useJUnit()
+        testLogging {
+            events("passed", "skipped", "failed")
+        }
+    }
+
+    register<JavaExec>("runHytale") {
+        dependencies {
+            // All dependencies available for compilation and runtime
+            runtimeOnly("com.hypixel.hytale:Server:2026.02.19-1a311a592")
+            runtimeOnly("curse.maven:Multiplehud-1423634:7530266")
+            runtimeOnly("curse.maven:HyUI-1431415:7667069")
+        }
+        val appData = System.getenv("APPDATA")
+        val defaultAssetsPath = "$appData\\Hytale\\install\\release\\package\\game\\latest\\Assets.zip"
+
+        val hytaleAssets = project.findProperty("hytaleAssets") as String? ?: defaultAssetsPath
+
+        group = "application"
+        mainClass.set("com.hypixel.hytale.Main")
+
+        classpath = sourceSets.main.get().runtimeClasspath + runtimeServer
+
+        standardInput = System.`in`
+        workingDir = file("run")
+        args(
+            "--allow-op",
+            "--assets=$hytaleAssets",
+            "--disable-sentry",
+            "--bind=0.0.0.0:5525"
+        )
+
+        jvmArgs("-XX:+ClassUnloading", "-Xmx2G")
+//        jvmArgs("-XX:+AllowEnhancedClassRedefinition", "-XX:+ClassUnloading")
+    }
 }
 
-// Configure Java toolchain
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(25))
+publishing {
+    publications {
+        create<MavenPublication>("gpr") {
+            artifact(tasks.shadowJar.get())
+
+            groupId = project.group.toString()
+            artifactId = "chunk-generator"
+            version = project.version.toString()
+        }
+    }
+    repositories {
+        maven {
+            name = "GitHubPackages"
+            // Replace USERNAME/REPO with your actual GitHub info
+            url = uri("https://maven.pkg.github.com/Crafters-Mods/hytale-chunk-generator")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
+        }
     }
 }

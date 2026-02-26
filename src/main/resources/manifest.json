@@ -1,6 +1,6 @@
 {
   "Group": "Miilhozinho",
-  "Name": "ChunkGenerator",
+  "Name": "${Name}",
   "Version": "${Version}",
   "Description": "${Description}",
   "Authors": [
@@ -11,12 +11,11 @@
     }
   ],
   "Website": "https://github.com/yourusername/hytale-plugin-template",
-  "Main": "com.miilhozinho.chunkgenerator.ChunkGenerator",
-  "ServerVersion": "*",
+  "Main": "com.miilhozinho.chunkgenerator.ChunkGeneratorPlugin",
+  "ServerVersion": "${ServerVersion}",
   "Dependencies": {
-    "Hytale:EntityModule": "*",
-    "Hytale:AssetModule": "*",
-    "Buuz135:MultipleHUD": "*"
+    "Ellie:HyUI": ">=0.9.0",
+    "Buuz135:MultipleHUD": ">=1.0.4"
   },
   "OptionalDependencies": {},
   "DisabledByDefault": false,
